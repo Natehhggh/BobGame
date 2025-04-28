@@ -8,12 +8,11 @@
 
 
 entity* newEntity(){
-
     entity* newEntity = NULL;  
     for(int i = 0; i < MAX_ENTITIES; i++){
-        if(entities[i].flags & Free){
-            entities[i].flags |= Free;
-            newEntity = &entities[i];
+        if(state.entities[i].flags & Free){
+            state.entities[i].flags = 0;
+            newEntity = &state.entities[i];
             break;
         }
     }
@@ -25,7 +24,7 @@ void freeEntity(entity* entity){
 }
 void setDefaultData(){
     for(int i = 0; i < MAX_ENTITIES; ++i){
-        entities[i].flags = Free;
+        state.entities[i].flags = Free;
     }
 }
 

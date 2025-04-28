@@ -13,8 +13,8 @@ typedef enum {
     Active = 1 << 1,
     PlayerControlled = 1 << 2,
     ShapeRendered = 1 << 3,
-    SpriteRendered = 1 << 4,
-    ModelRendered= 1 << 5,
+    ModelRendered = 1 << 4,
+    Orbiting = 1 << 5,
     Unused003 = 1 << 6,
     Unused004 = 1 << 7,
     Unused005 = 1 << 8,
@@ -49,57 +49,71 @@ typedef enum shapeType {
     Plane
 } shapeType;
 
-typedef enum renderMode {
-    _2d,
-    _3d
-} renderMode;
+typedef struct {
+    Vector3 origin;
+    float radius;
+    float period;
+    float t;
+} orbitCircular;
+
+//https://en.wikipedia.org/wiki/Kepler_orbit
+//We can have cool orbits when the idea works
+typedef struct {
+    Vector3 origin;
+    float a; //semi major axis
+    float e; //eccentricity
+    float period;
+    float t;
+} orbit;
 
 typedef struct {
     int flags;
     Vector3 position;
     Vector3 rotation;
     Vector3 scale;
+    Vector3 velocity;
+    float mass;
+    orbitCircular orbit;
     enum shapeType shape;
-    //TOOD: refactor sprite system to animation state machine
-    Texture2D spritesheet;
-    Rectangle sourceRec;
-    Rectangle spriteRec;
-    int spriteFrames;
-    int currentFrame;
-    float frameTime;
-    float frameTimeAcc;
-    float spriteWidth;
-    float spriteHeight;
+    Color color;
 } entity;
 
-
-//Why does this struct complain wihtout the world2d name at the start?
-typedef struct world2d{
-    int tileSize;
-    int tiles[];
-
-} world2d;
 
 //TODO: enum for other cameras like first person, just get any camera in here
 typedef struct thirdPersonCamera{
     entity* target;
     Camera3D camera;
     Vector3 offset;
+    float radius;
+    float polarAngle;
+    float azimuthAngle;
+
 } thirdPersonCamera;
 
-typedef struct followingCamera{
-    entity* target;
-    Camera2D camera;
-} followingCamera;
 
-#define MAX_ENTITIES 100
-//TODO: do I put this in a game state struct
-entity entities[MAX_ENTITIES];
-thirdPersonCamera camera = {0};
-followingCamera camera2d = {0};
-enum renderMode rendering = _3d;
-int screenHeight = 720;
-int screenWidth = 1280;
+#define MAX_ENTITIES 1024
+
+typedef struct GameState{
+    bool paused;
+    bool drawDebug;
+    bool showFPS;
+    int debugEntityIdx; 
+    int screenHeight;
+    int screenWidth;
+
+    entity entities[MAX_ENTITIES];
+    thirdPersonCamera camera;
+} GameState;
+
+GameState state = {
+    .paused = false,
+    .drawDebug = false,
+    .showFPS = false,
+    .debugEntityIdx = 0,
+    .screenHeight =720,
+    .screenWidth = 1280,
+    .camera = {0},
+};
 
 
 #endif
