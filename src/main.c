@@ -8,15 +8,11 @@
 #include "player.c"
 #include "scene.c"
 
-#define RAYGUI_IMPLEMENTATION
+//#define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
 
-//FPS Notes:
-//white screen, ~14-15kfps
-//Initial ECS , ~13kfps flag ~8kfps
 
 //TODO: Fix name convention, not sure what im doing here, it's all over the place
-//TODO: Add Screenshot system
 //TODO: Check Flags Raylib, named vsync
 //TODO: Load Real Model and animate
 //TODO: Simple Profiler
@@ -28,28 +24,21 @@ void setup(){
 }
 
 
-//TODO: move to some rendering file, dont want to look at rendering logic here
-void drawPrimativeShapes(){
+
+
+//TODO: can I store the matrixes instead of creating them?
+void drawMeshes(){
     for(int i = 0; i < MAX_ENTITIES; ++i){
-        if(state.entities[i].flags & Active && state.entities[i].flags & ShapeRendered){
-            switch(state.entities[i].shape){
-                case Cube:
-                    DrawCubeV(state.entities[i].position, state.entities[i].scale, state.entities[i].color);
-                    break;
-                case Sphere:
-                    DrawSphere(state.entities[i].position, state.entities[i].scale.x, state.entities[i].color);
-                    break;
-                case Cylinder:
-                    DrawCubeV(state.entities[i].position, state.entities[i].scale, state.entities[i].color);
-                    break;
-                case Capsule:
-                    DrawCubeV(state.entities[i].position, state.entities[i].scale, state.entities[i].color);
-                    break;
-                case Plane:
-                    DrawPlane(state.entities[i].position,
-                            (Vector2){state.entities[i].scale.x, state.entities[i].scale.z}, state.entities[i].color);
-                    break;
-            }
+        if(state.entities[i].flags & Active){
+            Vector3 scale = state.entities[i].scale;
+            Vector3 rotationAxis = state.entities[i].rotation;
+            Vector3 position = state.entities[i].position;
+            float rotationAngle = 0.0f;
+            Matrix matScale = MatrixScale(scale.x, scale.y, scale.z);
+            Matrix matRotation = MatrixRotate(rotationAxis, rotationAngle);
+            Matrix matTranslation = MatrixTranslate(position.x, position.y, position.z);
+            Matrix matTransform = MatrixMultiply(MatrixMultiply(matScale, matRotation), matTranslation);
+            DrawMesh(GameAssets.Meshes[state.entities[i].meshId] , GameAssets.Materials[state.entities[i].textureId] , matTransform);
         }
     }
 }
@@ -79,8 +68,7 @@ void DrawScene(){
         
         BeginMode3D(state.camera.camera);
         {
-            //TODO: Render struct 
-            drawPrimativeShapes();
+            drawMeshes();
         }
         EndMode3D();
 

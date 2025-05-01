@@ -12,9 +12,9 @@ typedef enum {
     Free = 1 << 0,
     Active = 1 << 1,
     PlayerControlled = 1 << 2,
-    ShapeRendered = 1 << 3,
-    ModelRendered = 1 << 4,
-    Orbiting = 1 << 5,
+    Orbiting = 1 << 3,
+    Unused001 = 1 << 4,
+    Unused002 = 1 << 5,
     Unused003 = 1 << 6,
     Unused004 = 1 << 7,
     Unused005 = 1 << 8,
@@ -41,14 +41,6 @@ typedef enum {
     Unused026 = 1 << 29,
 } entityFlags;
 
-typedef enum shapeType {
-    Cube,
-    Sphere,
-    Cylinder,
-    Capsule,
-    Plane
-} shapeType;
-
 typedef struct {
     Vector3 origin;
     float radius;
@@ -72,10 +64,10 @@ typedef struct {
     Vector3 rotation;
     Vector3 scale;
     Vector3 velocity;
+    int meshId;
+    int textureId;
     float mass;
     orbitCircular orbit;
-    enum shapeType shape;
-    Color color;
 } entity;
 
 
@@ -89,6 +81,16 @@ typedef struct thirdPersonCamera{
     float azimuthAngle;
 
 } thirdPersonCamera;
+
+
+//TODO: look into models, seems like thats how they get animated in raylib, not sure if it's right
+//Can I instance render a model playing random animation frames or only meshes are instanced? do I care about instance rendering for the scale of any game I make?
+typedef struct Assets{
+    Mesh Meshes[16];
+    Material Materials[32];
+    //Texture Textures[32];
+
+} Assets;
 
 
 #define MAX_ENTITIES 1024
@@ -105,6 +107,8 @@ typedef struct GameState{
     thirdPersonCamera camera;
 } GameState;
 
+//TODO: move state to main, and actually pass it
+
 GameState state = {
     .paused = false,
     .drawDebug = false,
@@ -114,6 +118,9 @@ GameState state = {
     .screenWidth = 1280,
     .camera = {0},
 };
+
+Assets GameAssets;
+
 
 
 #endif
