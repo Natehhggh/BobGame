@@ -1,21 +1,23 @@
 #include <math.h>
 #include <stdint.h>
 #include <unistd.h>
+//#include "rlights.h"
 #include "raylib.h"
 #include "core.h"
 #include "camera.c"
-#include "rlights.h"
 #include "player.c"
 #include "scene.c"
 
 //#define RAYGUI_IMPLEMENTATION
-#include "raygui.h"
+//#include "raygui.h"
 
 
 //TODO: Fix name convention, not sure what im doing here, it's all over the place
 //TODO: Check Flags Raylib, named vsync
-//TODO: Load Real Model and animate
+//TODO: Animator
 //TODO: Simple Profiler
+//TODO: Make Shaders Better
+//TODO: load from .so
 
 void setup(){
     InitWindow(state.screenWidth, state.screenHeight,"Jam Game");
@@ -40,7 +42,9 @@ void drawMeshes(){
             Matrix matTransform = MatrixMultiply(MatrixMultiply(matScale, matRotation), matTranslation);
             DrawMesh(GameAssets.Meshes[state.entities[i].meshId] , GameAssets.Materials[state.entities[i].textureId] , matTransform);
         }else if(state.entities[i].flags & Active && ModelRendered){
+            //BeginShaderMode(GameAssets.Shaders[0]);
             DrawModelEx(GameAssets.Models[state.entities[i].meshId], state.entities[i].position, state.entities[i].rotation, 0.0f, state.entities[i].scale, WHITE);
+            //EndShaderMode();
         }
     }
 }
@@ -108,6 +112,9 @@ void GameLoop(){
         HandleInput(dt);
         UpdateOrbits(dt);
         updateCamera(&state.camera);
+        float cameraPos[3] = {state.camera.camera.position.x, state.camera.camera.position.y, state.camera.camera.position.z};
+        SetShaderValue(GameAssets.Shaders[0], GameAssets.Shaders[0].locs[SHADER_LOC_VECTOR_VIEW], cameraPos, SHADER_UNIFORM_VEC3);
+        UpdateLightValues(GameAssets.Shaders[0], state.lights[0]);
         DrawScene();
     }
 }

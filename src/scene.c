@@ -5,6 +5,7 @@
 #include "core.h"
 #include "entity.c"
 #include "camera.c"
+#include <raymath.h>
 
 
 void LoadMeshes(){
@@ -25,8 +26,14 @@ void LoadTextures(){
 
 }
 
+void LoadShaders(){
+     GameAssets.Shaders[0] = LoadShader("src/lighting.vs", "src/lighting.fs");
+     GameAssets.Shaders[0].locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(GameAssets.Shaders[0], "viewPos");
+}
+
 void LoadModels(){
-    GameAssets.Models[0] = LoadModel("../SimpleCigarShip.obj");
+    GameAssets.Models[0] = LoadModel("./SimpleCigarShip.obj");
+    GameAssets.Models[0].materials[0].shader = GameAssets.Shaders[0];
 }
 
 //conflicting rename these
@@ -74,6 +81,10 @@ void initPlanet(Vector3 pos, Vector3 scale, float mass, Vector3 origin, float ra
     newPlanet->flags |= Orbiting;
 
 
+    //TODO, this is jank, redo it later;
+    state.lights[0] = CreateLight(LIGHT_POINT, pos, Vector3Zero(), WHITE, GameAssets.Shaders[0]);
+
+
     newPlanet->meshId = 1;
     newPlanet->textureId = 2;
 }
@@ -110,8 +121,9 @@ void initScene(){
 
     LoadMeshes();
     LoadTextures();
-    LoadModels();
+    LoadShaders();
     LoadMaterialsNate();
+    LoadModels();
 
     setDefaultData();
     initWorld();

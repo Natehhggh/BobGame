@@ -1,8 +1,10 @@
 #ifndef __NATE_CORE__
 #define __NATE_CORE__
 
+#define RLIGHTS_IMPLEMENTATION
 #include "raylib.h"
 #include "raymath.h"
+#include "rlights.h"
 
 #define WORLD_HEIGHT = 20;
 #define WORLD_WIDTH = 20;
@@ -85,11 +87,13 @@ typedef struct thirdPersonCamera{
 
 //TODO: look into models, seems like thats how they get animated in raylib, not sure if it's right
 //Can I instance render a model playing random animation frames or only meshes are instanced? do I care about instance rendering for the scale of any game I make?
+// TODO: enums for indexes, so I can auto increment count as needed
 typedef struct Assets{
     Mesh Meshes[16];
-    Material Materials[32];
+    Material Materials[16];
     Model Models[16];
-    Texture Textures[32];
+    Texture Textures[16];
+    Shader Shaders[16];
 
 } Assets;
 
@@ -105,6 +109,7 @@ typedef struct GameState{
     int screenWidth;
 
     entity entities[MAX_ENTITIES];
+    Light lights[MAX_LIGHTS];
     thirdPersonCamera camera;
 } GameState;
 
@@ -118,6 +123,7 @@ GameState state = {
     .screenHeight =720,
     .screenWidth = 1280,
     .camera = {0},
+    .lights = {0},
 };
 
 Assets GameAssets;
