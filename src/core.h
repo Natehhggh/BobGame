@@ -13,7 +13,7 @@ typedef enum {
     Active = 1 << 1,
     PlayerControlled = 1 << 2,
     Orbiting = 1 << 3,
-    Unused001 = 1 << 4,
+    ModelRendered = 1 << 4,
     Unused002 = 1 << 5,
     Unused003 = 1 << 6,
     Unused004 = 1 << 7,
@@ -88,7 +88,8 @@ typedef struct thirdPersonCamera{
 typedef struct Assets{
     Mesh Meshes[16];
     Material Materials[32];
-    //Texture Textures[32];
+    Model Models[16];
+    Texture Textures[32];
 
 } Assets;
 

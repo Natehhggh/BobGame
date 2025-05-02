@@ -29,7 +29,7 @@ void setup(){
 //TODO: can I store the matrixes instead of creating them?
 void drawMeshes(){
     for(int i = 0; i < MAX_ENTITIES; ++i){
-        if(state.entities[i].flags & Active){
+        if(state.entities[i].flags & Active && !(state.entities[i].flags & ModelRendered)){
             Vector3 scale = state.entities[i].scale;
             Vector3 rotationAxis = state.entities[i].rotation;
             Vector3 position = state.entities[i].position;
@@ -39,6 +39,8 @@ void drawMeshes(){
             Matrix matTranslation = MatrixTranslate(position.x, position.y, position.z);
             Matrix matTransform = MatrixMultiply(MatrixMultiply(matScale, matRotation), matTranslation);
             DrawMesh(GameAssets.Meshes[state.entities[i].meshId] , GameAssets.Materials[state.entities[i].textureId] , matTransform);
+        }else if(state.entities[i].flags & Active && ModelRendered){
+            DrawModelEx(GameAssets.Models[state.entities[i].meshId], state.entities[i].position, state.entities[i].rotation, 0.0f, state.entities[i].scale, WHITE);
         }
     }
 }

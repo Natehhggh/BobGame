@@ -25,6 +25,10 @@ void LoadTextures(){
 
 }
 
+void LoadModels(){
+    GameAssets.Models[0] = LoadModel("../SimpleCigarShip.obj");
+}
+
 //conflicting rename these
 void LoadMaterialsNate(){
     //TODO: test if they are copied, so I can just reuse the one
@@ -41,12 +45,13 @@ void LoadMaterialsNate(){
 
 void initPlayer(){
     entity* playerEntity = newEntity();
-    playerEntity->position = (Vector3){0.0f,0.0f,0.0f};
+    playerEntity->position = (Vector3){50.0f,50.0f,50.0f};
     playerEntity->rotation = (Vector3){0.0f,0.0f,0.0f};
     playerEntity->scale = (Vector3){1.0f,1.0f,1.0f};
 
     playerEntity->flags = playerEntity->flags | Active;
     playerEntity->flags = playerEntity->flags | PlayerControlled;
+    playerEntity->flags = playerEntity->flags | ModelRendered;
 
     playerEntity->meshId = 0;
     playerEntity->textureId = 0;
@@ -105,6 +110,7 @@ void initScene(){
 
     LoadMeshes();
     LoadTextures();
+    LoadModels();
     LoadMaterialsNate();
 
     setDefaultData();
