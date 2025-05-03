@@ -26,14 +26,33 @@ void LoadTextures(){
 
 }
 
+
 void LoadShaders(){
-     GameAssets.Shaders[0] = LoadShader("src/lighting.vs", "src/lighting.fs");
+     GameAssets.Shaders[0] = LoadShader("src/shaders/lighting.vert.glsl", "src/shaders/lighting.frag.glsl");
      GameAssets.Shaders[0].locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(GameAssets.Shaders[0], "viewPos");
+     GameAssets.Shaders[1] = LoadShader("src/shaders/sun.vert.glsl", "src/shaders/sun.frag.glsl");
+     GameAssets.Shaders[1].locs[SHADER_LOC_MAP_EMISSION] = GetShaderLocation(GameAssets.Shaders[1], "emission");
+     GameAssets.Shaders[1].locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(GameAssets.Shaders[1], "viewPos");
+
+}
+
+void AssignShaders(){
+    GameAssets.Models[0].materials[0].shader = GameAssets.Shaders[0];
+    GameAssets.Materials[2].shader = GameAssets.Shaders[0];
+    GameAssets.Materials[1].shader = GameAssets.Shaders[1];
+}
+
+
+void ReloadShaders(){
+    UnloadShader(GameAssets.Shaders[0]);
+    UnloadShader(GameAssets.Shaders[1]);
+    LoadShaders();
+    AssignShaders();
+
 }
 
 void LoadModels(){
     GameAssets.Models[0] = LoadModel("./SimpleCigarShip.obj");
-    GameAssets.Models[0].materials[0].shader = GameAssets.Shaders[0];
 }
 
 //conflicting rename these
@@ -44,6 +63,11 @@ void LoadMaterialsNate(){
     GameAssets.Materials[0] = matDefault;
     Material matDefault1 = LoadMaterialDefault();
     matDefault1.maps[MATERIAL_MAP_DIFFUSE].color = YELLOW;
+    matDefault1.maps[MATERIAL_MAP_EMISSION].color = WHITE;
+    matDefault1.maps[MATERIAL_MAP_EMISSION].value = 1.0f;
+    matDefault1.maps[MATERIAL_MAP_EMISSION].texture = LoadTextureFromImage(GenImageColor(1, 1, WHITE));
+
+
     GameAssets.Materials[1] = matDefault1;
     Material matDefault2 = LoadMaterialDefault();
     matDefault2.maps[MATERIAL_MAP_DIFFUSE].color = BLUE;
@@ -52,7 +76,7 @@ void LoadMaterialsNate(){
 
 void initPlayer(){
     entity* playerEntity = newEntity();
-    playerEntity->position = (Vector3){50.0f,50.0f,50.0f};
+    playerEntity->position = (Vector3){1000.0f,0.0f,0.0f};
     playerEntity->rotation = (Vector3){0.0f,0.0f,0.0f};
     playerEntity->scale = (Vector3){1.0f,1.0f,1.0f};
 
@@ -67,11 +91,11 @@ void initPlayer(){
 }
 
 
-void initPlanet(Vector3 pos, Vector3 scale, float mass, Vector3 origin, float radius, float period, Color color){
+void initPlanet(Vector3 pos, float scale, float mass, Vector3 origin, float radius, float period, Color color){
     entity* newPlanet = newEntity();
     newPlanet->position = pos;
     newPlanet->rotation = (Vector3){0.0f,0.0f,0.0f};
-    newPlanet->scale = scale;
+    newPlanet->scale = (Vector3){scale, scale, scale};
     newPlanet->mass = mass;
 
     orbitCircular orbit = (orbitCircular){origin, radius, period, 0.0f};
@@ -79,51 +103,48 @@ void initPlanet(Vector3 pos, Vector3 scale, float mass, Vector3 origin, float ra
 
     newPlanet->flags |= Active;
     newPlanet->flags |= Orbiting;
-
-
-    //TODO, this is jank, redo it later;
-    state.lights[0] = CreateLight(LIGHT_POINT, pos, Vector3Zero(), WHITE, GameAssets.Shaders[0]);
-
+    newPlanet->tint = color;
 
     newPlanet->meshId = 1;
     newPlanet->textureId = 2;
 }
 
-void initStar(Vector3 pos, Vector3 scale, float mass, Color color){
+void initStar(Vector3 pos, float scale, float mass, Color color){
     entity* newPlanet = newEntity();
     newPlanet->position = pos;
     newPlanet->rotation = (Vector3){0.0f,0.0f,0.0f};
-    newPlanet->scale = scale;
+    newPlanet->scale = (Vector3){scale, scale, scale};
     newPlanet->mass = mass;
 
     newPlanet->flags |= Active;
+    newPlanet->tint = color;
 
+    state.lights[0] = CreateLight(LIGHT_POINT, pos, Vector3Zero(), BLUE, GameAssets.Shaders[0]);
     newPlanet->meshId = 1;
     newPlanet->textureId = 1;
 }
 
 
+//TODO: store this in some format and read into it
 void initWorld(){
-    initPlanet((Vector3){0.0f, 0.0f, 0.0f}, (Vector3){1.0f, 1.0f,1.0f}, 1000.0f, (Vector3){0.0f, 0.0f, 0.0f}, 50.0f, 50, BROWN);
-    initPlanet((Vector3){0.0f, 0.0f, 0.0f}, (Vector3){1.0f, 1.0f,1.0f}, 1000.0f, (Vector3){0.0f, 0.0f, 0.0f}, 50.0f, 10, BROWN);
-    initPlanet((Vector3){0.0f, 0.0f, 0.0f}, (Vector3){1.0f, 1.0f,1.0f}, 1000.0f, (Vector3){0.0f, 0.0f, 0.0f}, 50.0f, 1, BROWN);
-    initPlanet((Vector3){0.0f, 0.0f, 0.0f}, (Vector3){2.0f, 2.0f,2.0f}, 1000.0f, (Vector3){0.0f, 0.0f, 0.0f}, 150.0f, 150, BLUE);
-    initPlanet((Vector3){0.0f, 0.0f, 0.0f}, (Vector3){5.0f, 5.0f,5.0f}, 1000.0f, (Vector3){0.0f, 0.0f, 0.0f}, 300.0f, 300, GREEN);
-    initPlanet((Vector3){0.0f, 0.0f, 0.0f}, (Vector3){5.0f, 5.0f,5.0f}, 1000.0f, (Vector3){0.0f, 0.0f, 0.0f}, 400.0f, 400, GREEN);
-    initPlanet((Vector3){0.0f, 0.0f, 0.0f}, (Vector3){5.0f, 5.0f,5.0f}, 1000.0f, (Vector3){0.0f, 0.0f, 0.0f}, 500.0f, 500, GREEN);
-    initPlanet((Vector3){0.0f, 0.0f, 0.0f}, (Vector3){5.0f, 5.0f,5.0f}, 1000.0f, (Vector3){0.0f, 0.0f, 0.0f}, 600.0f, 600, GREEN);
-    initPlanet((Vector3){0.0f, 0.0f, 0.0f}, (Vector3){5.0f, 5.0f,5.0f}, 1000.0f, (Vector3){0.0f, 0.0f, 0.0f}, 700.0f, 700, GREEN);
-    initPlanet((Vector3){0.0f, 0.0f, 0.0f}, (Vector3){5.0f, 5.0f,5.0f}, 1000.0f, (Vector3){0.0f, 0.0f, 0.0f}, 800.0f, 800, GREEN);
-    initStar((Vector3){0.0f, 0.0f,0.0f}, (Vector3){30.0f, 30.0f,30.0f}, 1000.0f, YELLOW);
+    initPlanet((Vector3){0.0f, 0.0f, 0.0f}, 10.0f, 1000.0f, (Vector3){0.0f, 0.0f, 0.0f}, 500.0f, 50, DARKBROWN);
+    initPlanet((Vector3){0.0f, 0.0f, 0.0f}, 12.0f, 1000.0f, (Vector3){0.0f, 0.0f, 0.0f}, 1500.0f, 150, BROWN);
+    initPlanet((Vector3){0.0f, 0.0f, 0.0f}, 40.0f, 1000.0f, (Vector3){0.0f, 0.0f, 0.0f}, 3000.0f, 300, GREEN);
+    initPlanet((Vector3){0.0f, 0.0f, 0.0f}, 30.0f, 1000.0f, (Vector3){0.0f, 0.0f, 0.0f}, 4000.0f, 400, RED);
+    initPlanet((Vector3){0.0f, 0.0f, 0.0f}, 100.0f, 1000.0f, (Vector3){0.0f, 0.0f, 0.0f}, 6000.0f, 600, BEIGE);
+    initPlanet((Vector3){0.0f, 0.0f, 0.0f}, 70.0f, 1000.0f, (Vector3){0.0f, 0.0f, 0.0f}, 7000.0f, 700, BLUE);
+    initPlanet((Vector3){0.0f, 0.0f, 0.0f}, 5.0f, 1000.0f, (Vector3){0.0f, 0.0f, 0.0f}, 8000.0f, 800, DARKGRAY);
+    initStar((Vector3){0.0f, 0.0f,0.0f}, 300.0f, 1000.0f, YELLOW);
 }
 
 void initScene(){
-
+    //TODO: Load these seperately
     LoadMeshes();
     LoadTextures();
     LoadShaders();
     LoadMaterialsNate();
     LoadModels();
+    AssignShaders();
 
     setDefaultData();
     initWorld();

@@ -15,7 +15,7 @@ out vec4 finalColor;
 
 // NOTE: Add your custom variables here
 
-#define     MAX_LIGHTS              4
+#define     MAX_LIGHTS              256
 #define     LIGHT_DIRECTIONAL       0
 #define     LIGHT_POINT             1
 
@@ -31,6 +31,7 @@ struct Light {
 uniform Light lights[MAX_LIGHTS];
 uniform vec4 ambient;
 uniform vec3 viewPos;
+uniform int specPow;
 
 void main()
 {
@@ -49,29 +50,41 @@ void main()
     {
         if (lights[i].enabled == 1)
         {
-            vec3 light = vec3(0.0);
+            //
+            // Get Lighting Direction and attenuation
+            //
+            vec3 light;
+            float attenuation = 1.0f;
+            float specCo = 0.0;
 
             if (lights[i].type == LIGHT_DIRECTIONAL)
             {
                 light = -normalize(lights[i].target - lights[i].position);
+                
             }
-
             if (lights[i].type == LIGHT_POINT)
             {
-                light = normalize(lights[i].position - fragPosition);
+                vec3 distV = lights[i].position - fragPosition;
+                light = normalize(distV);
+                float d = length(distV);
+                attenuation = clamp( 1.0f / d, 0.0, 1.0);
             }
 
-            float NdotL = max(dot(normal, light), 0.0);
-            lightDot += lights[i].color.rgb*NdotL;
+            
+            
 
-            float specCo = 0.0;
-            if (NdotL > 0.0) specCo = pow(max(0.0, dot(viewD, reflect(-(light), normal))), 16.0); // 16 refers to shine
-            specular += specCo;
+            float NdotL = max(dot(normal, light), 0.0);
+            lightDot += lights[i].color.rgb*NdotL * attenuation;
+
+            if (NdotL > 0.0){ 
+                specCo = pow(max(0.0, dot(viewD, reflect(-(light), normal))), specPow); // 16 refers to shine
+            }
+
+            specular += specCo * attenuation;
         }
     }
-
-    finalColor = (texelColor*((tint + vec4(specular, 1.0))*vec4(lightDot, 1.0)));
-    finalColor += texelColor*(ambient/10.0)*tint;
+    //Spec + light? + ambient;
+    finalColor = (texelColor*((tint + vec4(specular, 1.0)) * vec4(lightDot, 1.0)) + texelColor*(ambient/10.0)*tint);
 
     // Gamma correction
     finalColor = pow(finalColor, vec4(1.0/2.2));

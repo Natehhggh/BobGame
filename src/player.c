@@ -9,7 +9,7 @@
 //TODO: return input state, move logic to another spot
 void HandleInput(float deltaTime){
 
-    float playerSpeed = 50.0f * deltaTime; 
+    float playerSpeed = 500.0f * deltaTime; 
     Vector3 playerInputDir = {0.0f,0.0f,0.0f};
 
     if(IsKeyDown(KEY_W)){
@@ -56,6 +56,9 @@ void HandleInput(float deltaTime){
         }
     }
 
+    if(IsKeyPressed(KEY_F11)){
+        state.reloadShaders = true;
+    }
 
     if(IsMouseButtonDown(MOUSE_BUTTON_RIGHT)){
         Vector2 mouseMove = GetMouseDelta();

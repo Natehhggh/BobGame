@@ -47,7 +47,7 @@ typedef struct {
     Vector3 origin;
     float radius;
     float period;
-    float t;
+    float t; //TODO: make a universal time so everything doesn't reset
 } orbitCircular;
 
 //https://en.wikipedia.org/wiki/Kepler_orbit
@@ -57,7 +57,7 @@ typedef struct {
     float a; //semi major axis
     float e; //eccentricity
     float period;
-    float t;
+    float t; 
 } orbit;
 
 typedef struct {
@@ -69,6 +69,7 @@ typedef struct {
     int meshId;
     int textureId;
     float mass;
+    Color tint;
     orbitCircular orbit;
 } entity;
 
@@ -104,6 +105,8 @@ typedef struct GameState{
     bool paused;
     bool drawDebug;
     bool showFPS;
+    bool reloadShaders;
+    bool reloadCode; //TODO: Hot Reload
     int debugEntityIdx; 
     int screenHeight;
     int screenWidth;
@@ -116,9 +119,6 @@ typedef struct GameState{
 //TODO: move state to main, and actually pass it
 
 GameState state = {
-    .paused = false,
-    .drawDebug = false,
-    .showFPS = false,
     .debugEntityIdx = 0,
     .screenHeight =720,
     .screenWidth = 1280,

@@ -1,23 +1,19 @@
 #include <math.h>
 #include <stdint.h>
 #include <unistd.h>
-//#include "rlights.h"
 #include "raylib.h"
 #include "core.h"
 #include "camera.c"
 #include "player.c"
 #include "scene.c"
 
-//#define RAYGUI_IMPLEMENTATION
-//#include "raygui.h"
-
-
 //TODO: Fix name convention, not sure what im doing here, it's all over the place
-//TODO: Check Flags Raylib, named vsync
 //TODO: Animator
 //TODO: Simple Profiler
 //TODO: Make Shaders Better
 //TODO: load from .so
+//TODO: figure out loading files independant of calling location
+
 
 void setup(){
     InitWindow(state.screenWidth, state.screenHeight,"Jam Game");
@@ -35,12 +31,17 @@ void drawMeshes(){
             Vector3 scale = state.entities[i].scale;
             Vector3 rotationAxis = state.entities[i].rotation;
             Vector3 position = state.entities[i].position;
+
             float rotationAngle = 0.0f;
             Matrix matScale = MatrixScale(scale.x, scale.y, scale.z);
             Matrix matRotation = MatrixRotate(rotationAxis, rotationAngle);
             Matrix matTranslation = MatrixTranslate(position.x, position.y, position.z);
             Matrix matTransform = MatrixMultiply(MatrixMultiply(matScale, matRotation), matTranslation);
-            DrawMesh(GameAssets.Meshes[state.entities[i].meshId] , GameAssets.Materials[state.entities[i].textureId] , matTransform);
+            Material mat = GameAssets.Materials[state.entities[i].textureId];
+
+            mat.maps[MATERIAL_MAP_DIFFUSE].color = state.entities[i].tint;
+
+            DrawMesh(GameAssets.Meshes[state.entities[i].meshId], mat, matTransform);
         }else if(state.entities[i].flags & Active && ModelRendered){
             //BeginShaderMode(GameAssets.Shaders[0]);
             DrawModelEx(GameAssets.Models[state.entities[i].meshId], state.entities[i].position, state.entities[i].rotation, 0.0f, state.entities[i].scale, WHITE);
@@ -92,7 +93,7 @@ void UpdateOrbits(float dt){
     for(int i = 0; i < MAX_ENTITIES; ++i){
         if((state.entities[i].flags & Active) && (state.entities[i].flags & Orbiting)){
             state.entities[i].orbit.t += dt;
-            float x = state.entities[i].orbit.t / state.entities[i].orbit.period * 2.0f * 3.14159f;
+            float x = state.entities[i].orbit.t / state.entities[i].orbit.period * 2.0f * PI;
             if(state.entities[i].orbit.t >= state.entities[i].orbit.period){
                 state.entities[i].orbit.t -= state.entities[i].orbit.period;
             }
@@ -105,44 +106,38 @@ void UpdateOrbits(float dt){
 }
 
 
+void UpdateAndRender(float dt){
+    UpdateOrbits(dt);
+    updateCamera(&state.camera);
+    float cameraPos[3] = {state.camera.camera.position.x, state.camera.camera.position.y, state.camera.camera.position.z};
+    SetShaderValue(GameAssets.Shaders[0], GameAssets.Shaders[0].locs[SHADER_LOC_VECTOR_VIEW], cameraPos, SHADER_UNIFORM_VEC3);
+    SetShaderValue(GameAssets.Shaders[1], GameAssets.Shaders[1].locs[SHADER_LOC_VECTOR_VIEW], cameraPos, SHADER_UNIFORM_VEC3);
+    UpdateLightValues(GameAssets.Shaders[0], state.lights[0]);
+    DrawScene();
+
+}
+
+void HandleReloads(){
+    if(state.reloadShaders){
+        ReloadShaders();
+        state.reloadShaders = false;
+    }
+
+
+}
+
+
+//come back to it, going to pass dt into updates and use that for now
+//https://gafferongames.com/post/fix_your_timestep/
 //TODO: draw scene only on a delta time?
+
 void GameLoop(){
     while(!WindowShouldClose()){ 
         float dt = GetFrameTime();
         HandleInput(dt);
-        UpdateOrbits(dt);
-        updateCamera(&state.camera);
-        float cameraPos[3] = {state.camera.camera.position.x, state.camera.camera.position.y, state.camera.camera.position.z};
-        SetShaderValue(GameAssets.Shaders[0], GameAssets.Shaders[0].locs[SHADER_LOC_VECTOR_VIEW], cameraPos, SHADER_UNIFORM_VEC3);
-        UpdateLightValues(GameAssets.Shaders[0], state.lights[0]);
-        DrawScene();
+        HandleReloads();
+        UpdateAndRender(dt);
     }
-}
-//TODO: Do this
-//come back to it, going to pass dt into updates and use that for now
-//https://gafferongames.com/post/fix_your_timestep/
-void GameLoop2(){
-    //clock_t clockOld, timeNew;
-     
-    //double timeOld = time(NULL);
-    double t = 0.0f;
-    double dt = 0.01f;
-    double accumulator = 0.0f;
-    while(!WindowShouldClose())
-    {
-
-        //double timeNew = time(NULL);
-        //double timeSince = timeNew - timeOld;
-        //timeOld = timeNew;
-        //if(timeSince > 0.25){
-         //   timeSince = 0.25;
-        //}
-        //HandleInput();
-        //updateSprites();
-        //updateCamera(&camera);
-        //DrawScene();
-    }
-
 }
 
 int main()
