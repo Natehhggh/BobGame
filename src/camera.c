@@ -7,6 +7,8 @@
 #include <raymath.h>
 
 
+//cant rename to pascal, raylib has it's own
+//TODO: Bugfix it jumps around, likely trig quadrent issue
 void updateCamera(thirdPersonCamera* camera){
     //Vector3 IdealOffset = >
 

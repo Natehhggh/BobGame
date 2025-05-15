@@ -1,13 +1,53 @@
-#ifndef __NATE_CORE__
-#define __NATE_CORE__
+#pragma once
 
 #define RLIGHTS_IMPLEMENTATION
 #include "raylib.h"
 #include "raymath.h"
 #include "rlights.h"
+#include "assetMap.h"
 
-#define WORLD_HEIGHT = 20;
-#define WORLD_WIDTH = 20;
+
+typedef enum{
+    PAUSED,
+    DRAW_DEBUG,
+    SHOW_FPS,
+    RELOAD_SHADERS,
+    RELOAD_CODE,
+    DEBUG_INDEX_COUNT
+} DEBUG_INDEX;
+
+typedef enum{
+    FORWARD = KEY_W,
+    BACK = KEY_S,
+    LEFT = KEY_A,
+    RIGHT = KEY_D,
+    UP = KEY_SPACE,
+    DOWN = KEY_LEFT_CONTROL,
+    PAUSE = KEY_PAUSE,
+    TOGGLE_DEBUG = KEY_F2,
+    TOGGLE_FPS = KEY_F3,
+    DEBUG_INC = KEY_KP_ADD,
+    DEBUG_DEC = KEY_KP_SUBTRACT,
+    RELOAD_SHADERS_KEY = KEY_F11,
+    RELOAD_CODE_KEY = KEY_F10,
+    CAMERA_DRAG = MOUSE_BUTTON_RIGHT, 
+
+
+    
+    INPUT_COUNT,
+}INPUT_KEYS;
+
+
+
+typedef enum{
+    PROJECTILE,
+    BEAM,
+    HITSCAN,
+    SPAWNER, //drones?
+
+
+    WEAPON_TYPE_COUNT
+}WEAPON_TYPE;
 
 
 typedef enum {
@@ -60,14 +100,37 @@ typedef struct {
     float t; 
 } orbit;
 
+
+//TODO: union this stuff
+typedef struct{
+    WEAPON_TYPE type;
+    float damage;
+    float speed;
+    int ammoCount;
+    int ammoPerShot;
+
+} weapon;
+
+
+
 typedef struct {
     int flags;
     Vector3 position;
     Vector3 rotation;
+    //Vector3 targetRotation;
+    float turnSpeed;
     Vector3 scale;
     Vector3 velocity;
-    int meshId;
-    int textureId;
+    union{
+        int meshId;
+        int modelId;
+    };
+    union{
+        int textureId; //Not sure if I need both or not 
+        int materialId;
+    };
+    int animFrame;
+    int animIdx;
     float mass;
     Color tint;
     orbitCircular orbit;
@@ -88,25 +151,20 @@ typedef struct thirdPersonCamera{
 
 //TODO: look into models, seems like thats how they get animated in raylib, not sure if it's right
 //Can I instance render a model playing random animation frames or only meshes are instanced? do I care about instance rendering for the scale of any game I make?
-// TODO: enums for indexes, so I can auto increment count as needed
 typedef struct Assets{
-    Mesh Meshes[16];
-    Material Materials[16];
-    Model Models[16];
-    Texture Textures[16];
-    Shader Shaders[16];
-
+    Mesh Meshes[MESH_COUNT];
+    Material Materials[MATERIAL_COUNT];
+    Model Models[MODEL_COUNT];
+    Texture Textures[TEXTURE_COUNT];
+    Shader Shaders[SHADER_COUNT];
+    ModelAnimation Animations[ANIMATION_COUNT];
 } Assets;
 
 
 #define MAX_ENTITIES 1024
 
 typedef struct GameState{
-    bool paused;
-    bool drawDebug;
-    bool showFPS;
-    bool reloadShaders;
-    bool reloadCode; //TODO: Hot Reload
+    bool debugFlags[DEBUG_INDEX_COUNT];
     int debugEntityIdx; 
     int screenHeight;
     int screenWidth;
@@ -118,16 +176,6 @@ typedef struct GameState{
 
 //TODO: move state to main, and actually pass it
 
-GameState state = {
-    .debugEntityIdx = 0,
-    .screenHeight =720,
-    .screenWidth = 1280,
-    .camera = {0},
-    .lights = {0},
-};
-
-Assets GameAssets;
 
 
 
-#endif

@@ -5,78 +5,90 @@
 #include "raymath.h"
 #include "core.h"
 #include <stdint.h>
-
 //TODO: return input state, move logic to another spot
-void HandleInput(float deltaTime){
+void HandleInput(float deltaTime, GameState *state){
 
+    //TODO: Move variables to game objects
     float playerSpeed = 500.0f * deltaTime; 
+    float scaleChange = 1.0f;
     Vector3 playerInputDir = {0.0f,0.0f,0.0f};
 
-    if(IsKeyDown(KEY_W)){
+    if(IsKeyDown(FORWARD)){
         playerInputDir.x = 1.0f;
     }
-    if(IsKeyDown(KEY_A)){
+    if(IsKeyDown(LEFT)){
         playerInputDir.z = -1.0f;
     }
-    if(IsKeyDown(KEY_S)){
+    if(IsKeyDown(BACK)){
         playerInputDir.x = -1.0f;
     }
-    if(IsKeyDown(KEY_D)){
+    if(IsKeyDown(RIGHT)){
         playerInputDir.z = 1.0f;
     }
-    if(IsKeyDown(KEY_LEFT_CONTROL)){
+    if(IsKeyDown(DOWN)){
         playerInputDir.y = -1.0f;
     }
-    if(IsKeyDown(KEY_SPACE)){
+    if(IsKeyDown(UP)){
         playerInputDir.y = 1.0f;
     }
 
-    if(IsKeyPressed(KEY_PAUSE)){
-        state.paused = !state.paused;
+    if(IsKeyDown(KEY_PAGE_UP)){
+        scaleChange = 1.0f + (0.1f * deltaTime);
+    }
+    if(IsKeyDown(KEY_PAGE_DOWN)){
+        scaleChange = 1.0f - (0.1f * deltaTime);
     }
 
-    if(IsKeyPressed(KEY_F2)){
-        state.drawDebug = !state.drawDebug;
-    }
-    if(IsKeyPressed(KEY_F3)){
-        state.showFPS = !state.showFPS;
+    if(IsKeyPressed(PAUSE)){
+        state->debugFlags[PAUSED] = !state->debugFlags[PAUSED];
     }
 
-    if(IsKeyPressed(KEY_KP_ADD)){
-        state.debugEntityIdx += 1;
-        if(state.debugEntityIdx >= MAX_ENTITIES){
-            state.debugEntityIdx = 0;
+    if(IsKeyPressed(TOGGLE_DEBUG)){
+        state->debugFlags[DRAW_DEBUG] = !state->debugFlags[DRAW_DEBUG];
+    }
+    if(IsKeyPressed(TOGGLE_FPS)){
+        state->debugFlags[SHOW_FPS] = !state->debugFlags[SHOW_FPS];
+    }
+
+    if(IsKeyPressed(DEBUG_INC)){
+        state->debugEntityIdx += 1;
+        if(state->debugEntityIdx >= MAX_ENTITIES){
+            state->debugEntityIdx = 0;
         }
     }
 
-    if(IsKeyPressed(KEY_KP_SUBTRACT)){
-        state.debugEntityIdx -= 1;
-        if(state.debugEntityIdx < 0){
-            state.debugEntityIdx = MAX_ENTITIES -1;
+    if(IsKeyPressed(DEBUG_DEC)){
+        state->debugEntityIdx -= 1;
+        if(state->debugEntityIdx < 0){
+            state->debugEntityIdx = MAX_ENTITIES -1;
         }
     }
 
-    if(IsKeyPressed(KEY_F11)){
-        state.reloadShaders = true;
+    if(IsKeyPressed(RELOAD_SHADERS_KEY)){
+        state->debugFlags[RELOAD_SHADERS] = true;
     }
 
-    if(IsMouseButtonDown(MOUSE_BUTTON_RIGHT)){
+    if(IsKeyPressed(RELOAD_CODE_KEY)){
+        state->debugFlags[RELOAD_CODE] = true;
+    }
+
+    if(IsMouseButtonDown(CAMERA_DRAG)){
         Vector2 mouseMove = GetMouseDelta();
-        state.camera.polarAngle += mouseMove.y / 100;
-        state.camera.azimuthAngle += mouseMove.x / 100;
+        state->camera.polarAngle += mouseMove.y / 100;
+        state->camera.azimuthAngle += mouseMove.x / 100;
     }
     
 
     
-
+    //TODO: put caps on, and some easing function to make scrolling feel bettr
     float mouseScroll = GetMouseWheelMove();
-    state.camera.radius += mouseScroll;
+    state->camera.radius += mouseScroll * 1.5f;
 
 
 
     
 
-
+    //TODO: move to settings
     if(IsKeyPressed(KEY_KP_0)){
         SetTargetFPS(10000000);
     }
@@ -94,14 +106,16 @@ void HandleInput(float deltaTime){
     }
 
 
-    if(state.paused){return;}
+    if(state->debugFlags[PAUSED]){return;}
 
     playerInputDir = Vector3Normalize(playerInputDir);
     playerInputDir = Vector3Scale(playerInputDir, playerSpeed);
 
     for(int i = 0; i < MAX_ENTITIES; i++){
-        if(state.entities[i].flags & Active && state.entities[i].flags & PlayerControlled){
-            state.entities[i].position = Vector3Add(playerInputDir, state.entities[i].position);
+        if(state->entities[i].flags & Active && state->entities[i].flags & PlayerControlled){
+            state->entities[i].position = Vector3Add(playerInputDir, state->entities[i].position);
+            state->entities[i].velocity = playerInputDir;
+            state->entities[i].scale = Vector3Scale(state->entities[i].scale, scaleChange);
         }
     }
     //transforms[playerInput.transformId].position = Vector3Add(transforms[playerInput.transformId].position, playerInputDir);
